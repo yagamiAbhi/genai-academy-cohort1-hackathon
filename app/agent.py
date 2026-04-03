@@ -134,6 +134,13 @@ def build_tool_context() -> ToolContext:
     """
     Initializes ToolContext with default state.
     """
-    ctx = ToolContext(invocation_context=None)
-    ctx.state = {"PROMPT": "", "PLAN_NOTES": ""}
-    return ctx
+    class _DummySession:
+        def __init__(self):
+            self.state: dict = {"PROMPT": "", "PLAN_NOTES": ""}
+
+    class _DummyInvocationContext:
+        def __init__(self):
+            self.session = _DummySession()
+
+    inv_ctx = _DummyInvocationContext()
+    return ToolContext(invocation_context=inv_ctx)
