@@ -1,0 +1,5 @@
+google-adk
+google-cloud-firestore
+google-genai
+pydantic
+python-dotenv
