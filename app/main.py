@@ -40,9 +40,9 @@ async def startup_session():
             user_id=DEFAULT_USER,
             session_id=DEFAULT_SESSION,
             state={
-                "plan_notes": "",
-                "execution_log": "",
-                "prompt": "",
+                "PROMPT": "",
+                "PLAN_NOTES": "",
+                "EXECUTION_LOG": "",
                 "CURRENT_DATETIME": None,  # populated at request time
             },
         )
@@ -67,9 +67,9 @@ async def handle_agent(request: AgentRequest) -> dict:
             user_id=DEFAULT_USER,
             session_id=DEFAULT_SESSION,
             state={
-                "plan_notes": "",
-                "execution_log": "",
-                "prompt": "",
+                "PROMPT": "",
+                "PLAN_NOTES": "",
+                "EXECUTION_LOG": "",
                 "CURRENT_DATETIME": None,
             },
         )
