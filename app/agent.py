@@ -39,6 +39,7 @@ planner_agent = Agent(
     description="Understands the user's request and drafts a structured action plan.",
     instruction="""
     Analyze the PROMPT and decide which tools to use:
+    - Use CURRENT_DATETIME (ISO) from state to resolve relative times like "tomorrow" or "next Monday".
     - For tasks: create or update tasks with due dates.
     - For schedules: create events.
     - For notes/information: create notes.
@@ -47,6 +48,9 @@ planner_agent = Agent(
 
     PROMPT:
     { PROMPT }
+
+    CURRENT_DATETIME (ISO):
+    { CURRENT_DATETIME }
     """,
     tools=[
         maps_toolset,
@@ -137,7 +141,13 @@ def build_tool_context() -> ToolContext:
     """
     class _DummySession:
         def __init__(self):
-            self.state: dict = {"PROMPT": "", "PLAN_NOTES": ""}
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc).isoformat()
+            self.state: dict = {
+                "PROMPT": "",
+                "PLAN_NOTES": "",
+                "CURRENT_DATETIME": now,
+            }
 
     class _DummyInvocationContext:
         def __init__(self):
