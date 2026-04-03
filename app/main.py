@@ -67,7 +67,7 @@ async def handle_agent(request: AgentRequest) -> dict:
         async for event in runner.run_async(
             user_id=DEFAULT_USER,
             session_id=DEFAULT_SESSION,
-            new_message={"user_content": {"text": request.message}},
+            new_message={"user_content": {"parts": [{"text": request.message}]}},
         ):
             events.append(event)
             # Extract final response text when available
