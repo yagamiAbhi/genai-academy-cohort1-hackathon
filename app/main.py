@@ -11,6 +11,7 @@ from app.models import init_db
 # ADK runner + services
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.genai import types as genai_types
 
 APP_NAME = "multi_agent_task_orchestrator"
 DEFAULT_USER = "local_user"
@@ -64,10 +65,14 @@ async def handle_agent(request: AgentRequest) -> dict:
     final_text = ""
     events = []
     try:
+        content = genai_types.Content(
+            role="user",
+            parts=[genai_types.Part(text=request.message)],
+        )
         async for event in runner.run_async(
             user_id=DEFAULT_USER,
             session_id=DEFAULT_SESSION,
-            new_message={"parts": [{"text": request.message}]},
+            new_message=content,
         ):
             events.append(event)
             # Extract final response text when available
