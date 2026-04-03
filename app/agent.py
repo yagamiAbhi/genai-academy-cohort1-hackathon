@@ -134,6 +134,6 @@ def build_tool_context() -> ToolContext:
     """
     Initializes ToolContext with default state.
     """
-    ctx = ToolContext()
+    ctx = ToolContext(invocation_context=None)
     ctx.state = {"PROMPT": "", "PLAN_NOTES": ""}
     return ctx
