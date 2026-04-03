@@ -39,7 +39,12 @@ async def startup_session():
             app_name=APP_NAME,
             user_id=DEFAULT_USER,
             session_id=DEFAULT_SESSION,
-            state={"plan_notes": "", "execution_log": "", "prompt": ""},
+            state={
+                "plan_notes": "",
+                "execution_log": "",
+                "prompt": "",
+                "CURRENT_DATETIME": None,  # populated at request time
+            },
         )
     except Exception:
         pass
@@ -61,7 +66,12 @@ async def handle_agent(request: AgentRequest) -> dict:
             app_name=APP_NAME,
             user_id=DEFAULT_USER,
             session_id=DEFAULT_SESSION,
-            state={"plan_notes": "", "execution_log": "", "prompt": ""},
+            state={
+                "plan_notes": "",
+                "execution_log": "",
+                "prompt": "",
+                "CURRENT_DATETIME": None,
+            },
         )
     except Exception:
         await session_service.get_session(
@@ -71,6 +81,14 @@ async def handle_agent(request: AgentRequest) -> dict:
     final_text = ""
     events = []
     try:
+        # Update CURRENT_DATETIME in session state for this request
+        from datetime import datetime, timezone
+
+        session = await session_service.get_session(
+            app_name=APP_NAME, user_id=DEFAULT_USER, session_id=DEFAULT_SESSION
+        )
+        session.state["CURRENT_DATETIME"] = datetime.now(timezone.utc).isoformat()
+
         content = genai_types.Content(
             role="user",
             parts=[genai_types.Part(text=request.message)],
