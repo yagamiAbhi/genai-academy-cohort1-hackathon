@@ -38,6 +38,16 @@ def add_task(
         session.close()
 
 
+# Alias to align with common tool name
+def create_task(
+    tool_context: ToolContext,
+    title: str,
+    due: Optional[str] = None,
+    notes: Optional[str] = None,
+) -> Dict[str, Any]:
+    return add_task(tool_context=tool_context, title=title, due=due, notes=notes)
+
+
 def list_tasks(tool_context: ToolContext, status: Optional[str] = None) -> List[Dict[str, Any]]:
     """List tasks, optionally filtered by status."""
     session = _get_session()
@@ -153,4 +163,3 @@ def search_notes(tool_context: ToolContext, query: str) -> List[Dict[str, Any]]:
         ]
     finally:
         session.close()
-

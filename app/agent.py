@@ -66,7 +66,7 @@ executor_agent = Agent(
     instruction="""
     Use PLAN_NOTES to decide which actions to execute.
     Always prefer structured tool calls over free-form text.
-    - add_task for new todos
+    - add_task or create_task for new todos
     - complete_task for done items
     - add_event for calendar items (ISO8601 timestamps)
     - add_note for summaries
@@ -79,6 +79,7 @@ executor_agent = Agent(
         maps_toolset,
         bigquery_toolset,
         db_tools.add_task,
+        db_tools.create_task,
         db_tools.complete_task,
         db_tools.add_event,
         db_tools.add_note,
