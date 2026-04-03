@@ -34,13 +34,11 @@ class AgentRequest(BaseModel):
 async def startup_session():
     """Ensure a session exists for local calls."""
     try:
-        await session_service.get_session(
-            app_name=APP_NAME, user_id=DEFAULT_USER, session_id=DEFAULT_SESSION
-        )
-    except Exception:
         await session_service.create_session(
             app_name=APP_NAME, user_id=DEFAULT_USER, session_id=DEFAULT_SESSION
         )
+    except Exception:
+        pass
 
 
 @app.get("/healthz")
@@ -55,11 +53,11 @@ async def handle_agent(request: AgentRequest) -> dict:
     """
     # Ensure session exists (defensive in case startup hook didn't run)
     try:
-        session = await session_service.create_session(
+        await session_service.create_session(
             app_name=APP_NAME, user_id=DEFAULT_USER, session_id=DEFAULT_SESSION
         )
     except Exception:
-        session = await session_service.get_session(
+        await session_service.get_session(
             app_name=APP_NAME, user_id=DEFAULT_USER, session_id=DEFAULT_SESSION
         )
 
@@ -68,7 +66,7 @@ async def handle_agent(request: AgentRequest) -> dict:
     try:
         async for event in runner.run_async(
             user_id=DEFAULT_USER,
-            session_id=session.session_id,
+            session_id=DEFAULT_SESSION,
             new_message=request.message,
         ):
             events.append(event)
