@@ -59,6 +59,11 @@ planner_agent = Agent(
         db_tools.list_tasks,
         db_tools.list_events,
         db_tools.search_notes,
+        db_tools.add_task,
+        db_tools.create_task,
+        db_tools.add_event,
+        db_tools.add_note,
+        db_tools.complete_task,
     ],
     output_key="plan_notes",
 )
