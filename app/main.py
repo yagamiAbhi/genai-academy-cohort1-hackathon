@@ -55,11 +55,11 @@ async def handle_agent(request: AgentRequest) -> dict:
     """
     # Ensure session exists (defensive in case startup hook didn't run)
     try:
-        await session_service.get_session(
+        session = await session_service.create_session(
             app_name=APP_NAME, user_id=DEFAULT_USER, session_id=DEFAULT_SESSION
         )
     except Exception:
-        await session_service.create_session(
+        session = await session_service.get_session(
             app_name=APP_NAME, user_id=DEFAULT_USER, session_id=DEFAULT_SESSION
         )
 
@@ -68,7 +68,7 @@ async def handle_agent(request: AgentRequest) -> dict:
     try:
         async for event in runner.run_async(
             user_id=DEFAULT_USER,
-            session_id=DEFAULT_SESSION,
+            session_id=session.session_id,
             new_message=request.message,
         ):
             events.append(event)
