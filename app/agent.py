@@ -39,8 +39,7 @@ planner_agent = Agent(
     description="Understands the user's request and drafts a structured action plan.",
     instruction="""
     Analyze the PROMPT and decide which tools to use:
-    - Use CURRENT_DATETIME (ISO) from state to resolve relative times like "tomorrow" or "next Monday". If CURRENT_DATETIME is present, DO NOT ask the user for the date.
-    - If CURRENT_DATETIME is missing, assume UTC now; do not ask the user for the date.
+    - Resolve relative times (e.g., "tomorrow", "next Monday") by assuming current time in UTC if none is provided in state. Do NOT ask the user for today's date.
     - For tasks: create or update tasks with due dates.
     - For schedules: create events.
     - For notes/information: create notes.
@@ -49,9 +48,6 @@ planner_agent = Agent(
 
     PROMPT:
     { PROMPT }
-
-    CURRENT_DATETIME (ISO):
-    { CURRENT_DATETIME }
     """,
     tools=[
         maps_toolset,
