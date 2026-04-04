@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import dotenv
 import google.cloud.logging
@@ -23,6 +23,8 @@ model_name = settings.model
 # --- Helper tool to stash user prompt in state ---
 def add_prompt_to_state(tool_context: ToolContext, prompt: str) -> dict[str, str]:
     tool_context.state["PROMPT"] = prompt
+    # Seed CURRENT_DATETIME if missing (UTC ISO) so agents can resolve relative times
+    tool_context.state.setdefault("CURRENT_DATETIME", datetime.now(timezone.utc).isoformat())
     logger.info("[State updated] PROMPT stored.")
     return {"status": "stored"}
 
@@ -39,12 +41,13 @@ planner_agent = Agent(
     description="Understands the user's request and drafts a structured action plan.",
     instruction="""
     Analyze the PROMPT and decide which tools to use:
-    - Resolve relative times (e.g., "tomorrow", "next Monday") by assuming current time in UTC if none is provided in state. Do NOT ask the user for today's date.
+    - Resolve relative times (e.g., "tomorrow", "next Monday") using CURRENT_DATETIME from state if present; otherwise assume current UTC now. Never ask the user for the date.
     - For tasks: create or update tasks with due dates.
     - For schedules: create events.
     - For notes/information: create notes.
     - Use Maps MCP for location reasoning; use BigQuery MCP for analytics if asked for insights.
     Save a concise plan to PLAN_NOTES and keep it in the tool context state.
+    IMPORTANT: Do not greet or speak to the user. Only produce plan notes and tool calls.
 
     PROMPT:
     { PROMPT }
@@ -77,6 +80,7 @@ executor_agent = Agent(
     - add_event for calendar items (ISO8601 timestamps)
     - add_note for summaries
     Include Maps/BigQuery tools only when relevant.
+    IMPORTANT: Do NOT speak to the user. If no tool calls are needed, return an empty string.
 
     PLAN_NOTES:
     { plan_notes }
@@ -128,9 +132,9 @@ root_agent = Agent(
     model=model_name,
     description="Entry point agent that stores prompt then delegates to workflow.",
     instruction="""
-    - Acknowledge the user's request briefly.
-    - Store the raw PROMPT via add_prompt_to_state.
-    - Hand off to task_manager_workflow to complete the job.
+    - If the user message is a simple greeting, thanks, or smalltalk with no task intent, reply briefly yourself and DO NOT call sub-agents.
+    - Otherwise, store the raw PROMPT via add_prompt_to_state and hand off to task_manager_workflow to complete the job.
+    - Only you (root) should speak to the user. Sub-agents must stay silent.
     """,
     tools=[add_prompt_to_state],
     sub_agents=[workflow],
