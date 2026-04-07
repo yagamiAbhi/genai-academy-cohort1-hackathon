@@ -42,9 +42,9 @@ planner_agent = Agent(
     instruction="""
     Analyze the PROMPT and decide which tools to use:
     - Resolve relative times (e.g., "tomorrow", "next Monday") using CURRENT_DATETIME from state if present; otherwise assume current UTC now. Never ask the user for the date.
-    - For tasks: create or update tasks with due dates.
-    - For schedules: create events.
-    - For notes/information: create notes.
+    - For tasks: create or update tasks with due dates (persisted in BigQuery).
+    - For schedules: create events (persisted in BigQuery).
+    - For notes/information: create notes (persisted in BigQuery).
     - Use Maps MCP for location reasoning; use BigQuery MCP for analytics if asked for insights.
     Save a concise plan to PLAN_NOTES and keep it in the tool context state.
     IMPORTANT: Do not greet or speak to the user. Only produce plan notes and tool calls.
@@ -75,10 +75,10 @@ executor_agent = Agent(
     instruction="""
     Use PLAN_NOTES to decide which actions to execute.
     Always prefer structured tool calls over free-form text.
-    - add_task or create_task for new todos
-    - complete_task for done items
-    - add_event for calendar items (ISO8601 timestamps)
-    - add_note for summaries
+    - add_task or create_task for new todos (stored in BigQuery)
+    - complete_task for done items (BigQuery)
+    - add_event for calendar items (ISO8601 timestamps) (BigQuery)
+    - add_note for summaries (BigQuery)
     Include Maps/BigQuery tools only when relevant.
     IMPORTANT: Do NOT speak to the user. If no tool calls are needed, return an empty string.
 

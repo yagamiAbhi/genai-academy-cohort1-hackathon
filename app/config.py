@@ -12,8 +12,8 @@ load_dotenv()
 
 class Settings:
     model: str = os.getenv("MODEL", "gemini-3.1-pro-preview")
-    # Use /tmp for SQLite so it works in Cloud Run (read-only code fs)
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
+    # BigQuery dataset for persistence (created if missing)
+    bigquery_dataset: str = os.getenv("BQ_DATASET", "assistant_data")
     google_cloud_project: str = os.getenv("GOOGLE_CLOUD_PROJECT", "project_not_set")
     maps_api_key: str = os.getenv("MAPS_API_KEY", "")
     bigquery_project: str = os.getenv("BIGQUERY_PROJECT", google_cloud_project)

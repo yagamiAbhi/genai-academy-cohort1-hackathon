@@ -1,69 +1,67 @@
-import os
 from datetime import datetime
-from typing import Optional
+from typing import Dict
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, create_engine
-from sqlalchemy.engine.url import make_url
-from sqlalchemy.orm import declarative_base, sessionmaker
+from google.cloud import bigquery
 
 from app.config import get_settings
 
 settings = get_settings()
 
-# Ensure SQLite target directory exists and is writable
-url = make_url(settings.database_url)
-if url.drivername == "sqlite" and url.database:
-    parent_dir = os.path.dirname(url.database)
-    if parent_dir and not os.path.exists(parent_dir):
-        try:
-            os.makedirs(parent_dir, exist_ok=True)
-        except PermissionError:
-            # In read-only filesystems (e.g., Cloud Run /app), advise using /tmp
-            raise PermissionError(
-                f"Cannot create directory {parent_dir}. "
-                "Set DATABASE_URL=sqlite:////tmp/app.db for Cloud Run."
+DATASET = settings.bigquery_dataset
+PROJECT = settings.bigquery_project
+
+
+def get_bq_client() -> bigquery.Client:
+    return bigquery.Client(project=PROJECT)
+
+
+def ensure_tables() -> None:
+    """Create dataset and tables if they don't exist."""
+    client = get_bq_client()
+
+    dataset_ref = bigquery.Dataset(f"{PROJECT}.{DATASET}")
+    dataset_ref.location = "US"
+    try:
+        client.get_dataset(dataset_ref)
+    except Exception:
+        client.create_dataset(dataset_ref, exists_ok=True)
+
+    tables: Dict[str, str] = {
+        "tasks": """
+            CREATE TABLE IF NOT EXISTS `{project}.{dataset}.tasks` (
+              id INT64,
+              title STRING NOT NULL,
+              due TIMESTAMP,
+              status STRING,
+              notes STRING,
+              created_at TIMESTAMP,
+              updated_at TIMESTAMP
             )
+        """,
+        "events": """
+            CREATE TABLE IF NOT EXISTS `{project}.{dataset}.events` (
+              id INT64,
+              title STRING NOT NULL,
+              start TIMESTAMP,
+              end TIMESTAMP,
+              location STRING,
+              description STRING,
+              created_at TIMESTAMP,
+              updated_at TIMESTAMP
+            )
+        """,
+        "notes": """
+            CREATE TABLE IF NOT EXISTS `{project}.{dataset}.notes` (
+              id INT64,
+              title STRING NOT NULL,
+              content STRING,
+              created_at TIMESTAMP,
+              updated_at TIMESTAMP
+            )
+        """,
+    }
 
-engine = create_engine(settings.database_url, echo=False, future=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
-
-Base = declarative_base()
-
-
-class Task(Base):
-    __tablename__ = "tasks"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), nullable=False)
-    due = Column(DateTime, nullable=True)
-    status = Column(String(50), default="open")
-    notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-class Event(Base):
-    __tablename__ = "events"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), nullable=False)
-    start = Column(DateTime, nullable=False)
-    end = Column(DateTime, nullable=False)
-    location = Column(String(255), nullable=True)
-    description = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-class Note(Base):
-    __tablename__ = "notes"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), nullable=False)
-    content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-def init_db() -> None:
-    Base.metadata.create_all(bind=engine)
+    for ddl in tables.values():
+        client.query(
+            ddl.format(project=PROJECT, dataset=DATASET)
+        ).result()

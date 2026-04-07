@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 from app.agent import root_agent
 from app.config import setup_logging
-from app.models import init_db
 
 # ADK runner + services
 from google.adk.runners import Runner
@@ -18,7 +17,6 @@ DEFAULT_USER = "local_user"
 DEFAULT_SESSION = "local_session"
 
 setup_logging()
-init_db()
 
 # Session service + runner
 session_service = InMemorySessionService()

@@ -4,6 +4,7 @@ sqlalchemy
 python-dotenv
 google-auth
 google-cloud-logging
+google-cloud-bigquery
 langchain-community==0.3.27
 google-adk==1.14.0
 httpx
