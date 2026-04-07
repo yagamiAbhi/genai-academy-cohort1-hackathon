@@ -23,8 +23,11 @@ model_name = settings.model
 # --- Helper tool to stash user prompt in state ---
 def add_prompt_to_state(tool_context: ToolContext, prompt: str) -> dict[str, str]:
     tool_context.state["PROMPT"] = prompt
+    tool_context.state["prompt"] = prompt
     # Seed CURRENT_DATETIME if missing (UTC ISO) so agents can resolve relative times
     tool_context.state.setdefault("CURRENT_DATETIME", datetime.now(timezone.utc).isoformat())
+    tool_context.state.setdefault("plan_notes", "")
+    tool_context.state.setdefault("execution_log", "")
     logger.info("[State updated] PROMPT stored.")
     return {"status": "stored"}
 
@@ -151,7 +154,9 @@ def build_tool_context() -> ToolContext:
             now = datetime.now(timezone.utc).isoformat()
             self.state: dict = {
                 "PROMPT": "",
-                "PLAN_NOTES": "",
+                "prompt": "",
+                "plan_notes": "",
+                "execution_log": "",
                 "CURRENT_DATETIME": now,
             }
 
