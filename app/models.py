@@ -3,15 +3,26 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, create_engine
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.config import get_settings
 
 settings = get_settings()
 
-# Ensure data directory exists for SQLite
-if settings.database_url.startswith("sqlite"):
-    os.makedirs("data", exist_ok=True)
+# Ensure SQLite target directory exists and is writable
+url = make_url(settings.database_url)
+if url.drivername == "sqlite" and url.database:
+    parent_dir = os.path.dirname(url.database)
+    if parent_dir and not os.path.exists(parent_dir):
+        try:
+            os.makedirs(parent_dir, exist_ok=True)
+        except PermissionError:
+            # In read-only filesystems (e.g., Cloud Run /app), advise using /tmp
+            raise PermissionError(
+                f"Cannot create directory {parent_dir}. "
+                "Set DATABASE_URL=sqlite:////tmp/app.db for Cloud Run."
+            )
 
 engine = create_engine(settings.database_url, echo=False, future=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
@@ -56,4 +67,3 @@ class Note(Base):
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
-

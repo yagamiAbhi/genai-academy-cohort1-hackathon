@@ -12,7 +12,8 @@ load_dotenv()
 
 class Settings:
     model: str = os.getenv("MODEL", "gemini-3.1-pro-preview")
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./data/app.db")
+    # Use /tmp for SQLite so it works in Cloud Run (read-only code fs)
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:////tmp/app.db")
     google_cloud_project: str = os.getenv("GOOGLE_CLOUD_PROJECT", "project_not_set")
     maps_api_key: str = os.getenv("MAPS_API_KEY", "")
     bigquery_project: str = os.getenv("BIGQUERY_PROJECT", google_cloud_project)
@@ -37,4 +38,3 @@ def setup_logging() -> None:
             level=getattr(logging, get_settings().log_level.upper(), logging.INFO),
             format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         )
-
