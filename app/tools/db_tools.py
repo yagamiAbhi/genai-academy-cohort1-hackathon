@@ -117,8 +117,8 @@ def add_event(
     row = {
         "id": event_id,
         "title": title,
-        "start": start,
-        "end": end,
+        "start_time": start,
+        "end_time": end,
         "location": location,
         "description": description,
         "created_at": now.isoformat(),
@@ -133,21 +133,21 @@ def add_event(
 
 def list_events(tool_context: ToolContext, after: Optional[str] = None) -> List[Dict[str, Any]]:
     """List events, optionally after a given ISO datetime."""
-    where = "WHERE start >= @after" if after else ""
+    where = "WHERE start_time >= @after" if after else ""
     params = [bigquery.ScalarQueryParameter("after", "TIMESTAMP", after)] if after else []
     query = f"""
-        SELECT id, title, start, end, location, description
+        SELECT id, title, start_time, end_time, location, description
         FROM `{PROJECT}.{DATASET}.events`
         {where}
-        ORDER BY start
+        ORDER BY start_time
     """
     rows = client.query(query, job_config=bigquery.QueryJobConfig(query_parameters=params)).result()
     return [
         {
             "id": r.id,
             "title": r.title,
-            "start": r.start.isoformat() if r.start else None,
-            "end": r.end.isoformat() if r.end else None,
+            "start": r.start_time.isoformat() if r.start_time else None,
+            "end": r.end_time.isoformat() if r.end_time else None,
             "location": r.location,
             "description": r.description,
         }

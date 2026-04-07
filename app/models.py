@@ -42,8 +42,8 @@ def ensure_tables() -> None:
             CREATE TABLE IF NOT EXISTS `{project}.{dataset}.events` (
               id INT64,
               title STRING NOT NULL,
-              start TIMESTAMP,
-              end TIMESTAMP,
+              start_time TIMESTAMP,
+              end_time TIMESTAMP,
               location STRING,
               description STRING,
               created_at TIMESTAMP,
